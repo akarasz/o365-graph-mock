@@ -115,6 +115,12 @@ func main() {
 
 	})
 
+	http.HandleFunc("/v1.0/me/contacts", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(response{baseURL, "", []*contact{}})
+	})
+
 	fmt.Println("listening on :9999")
 	if err := http.ListenAndServe(":9999", nil); err != nil {
 		panic(err)
