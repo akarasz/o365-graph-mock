@@ -32,7 +32,7 @@ type response struct {
 	Value    []*contact `json:"value"`
 }
 
-var chars = []rune("abcdefghijklmnopqrstvwxyxzABCDEFGHIJKLMNOPQRSTVWXYZ ")
+var chars = []rune("abcdefghijklmnopqrstvwxyxzABCDEFGHIJKLMNOPQRSTVWXYZ")
 
 func randomString(length int) string {
 	b := strings.Builder{}
@@ -73,10 +73,11 @@ func min(a, b int) int {
 
 var (
 	all     []*contact
-	baseURL = "https://example.com"
+	baseURL string
 )
 
 func main() {
+	baseURL = os.Args[1]
 	totalContacts, err := strconv.Atoi(os.Args[2])
 	if err != nil {
 		panic(err)
