@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
-	"math/rand"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
+	"github.com/brianvoe/gofakeit/v4"
 	"github.com/google/uuid"
 )
 
@@ -32,32 +32,18 @@ type response struct {
 	Value    []*contact `json:"value"`
 }
 
-var chars = []rune("abcdefghijklmnopqrstvwxyxzABCDEFGHIJKLMNOPQRSTVWXYZ")
-
-func randomString(length int) string {
-	b := strings.Builder{}
-	for i := 0; i < length; i++ {
-		b.WriteRune(chars[rand.Intn(len(chars))])
-	}
-	return b.String()
-}
-
-func randomPhone() string {
-	return fmt.Sprintf("%03d-555-%04d", rand.Intn(1000), rand.Intn(10000))
-}
-
 func randomContact() *contact {
 	id, _ := uuid.NewRandom()
-	firstName, lastName := randomString(10), randomString(15)
+	firstName, lastName := gofakeit.FirstName(), gofakeit.LastName()
 	displayName := fmt.Sprintf("%s %s", firstName, lastName)
-	email := fmt.Sprintf("%s.%s@example.com", firstName, lastName)
+	email := strings.ToLower(fmt.Sprintf("%s.%s@example.com", firstName, lastName))
 
 	return &contact{
-		BusinessPhones:    []string{randomPhone()},
+		BusinessPhones:    []string{gofakeit.Phone()},
 		DisplayName:       displayName,
 		GivenName:         firstName,
 		Mail:              email,
-		MobilePhone:       randomPhone(),
+		MobilePhone:       gofakeit.Phone(),
 		Surname:           lastName,
 		UserPrincipalName: email,
 		ID:                id,
@@ -77,11 +63,13 @@ var (
 )
 
 func main() {
-	baseURL = os.Args[1]
-	totalContacts, err := strconv.Atoi(os.Args[2])
-	if err != nil {
-		panic(err)
-	}
+	var (
+		baseURL       string
+		totalContacts int
+	)
+	flag.StringVar(&baseURL, "baseurl", "https://graph.microsoft.com", "Base URL used in results")
+	flag.IntVar(&totalContacts, "total", 100, "Number of available contacts behind the `/users` endpoint")
+	flag.Parse()
 
 	fmt.Print("generating ", totalContacts, " contacts... ")
 	all = make([]*contact, totalContacts)
@@ -101,6 +89,8 @@ func main() {
 
 		end := min(start+total, len(all))
 		anyLeft := len(all) != end
+
+		fmt.Printf("REQ /v1.0/users?total=%d&start=%d\n", total, start)
 
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
